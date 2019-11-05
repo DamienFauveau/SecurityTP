@@ -1,0 +1,17 @@
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\Security.exe
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\Security.deps.json
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\Security.runtimeconfig.json
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\Security.runtimeconfig.dev.json
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\Security.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\Security.pdb
+E:\Documents\Cours\MyDigtalSchool\M2\Security\obj\Debug\netcoreapp3.0\Security.csprojAssemblyReference.cache
+E:\Documents\Cours\MyDigtalSchool\M2\Security\obj\Debug\netcoreapp3.0\Security.AssemblyInfoInputs.cache
+E:\Documents\Cours\MyDigtalSchool\M2\Security\obj\Debug\netcoreapp3.0\Security.AssemblyInfo.cs
+E:\Documents\Cours\MyDigtalSchool\M2\Security\obj\Debug\netcoreapp3.0\Security.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\obj\Debug\netcoreapp3.0\Security.pdb
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\System.Data.SQLite.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\linux-x64\native\netstandard2.0\SQLite.Interop.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\osx-x64\native\netstandard2.0\SQLite.Interop.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\win-x64\native\netstandard2.0\SQLite.Interop.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\win-x86\native\netstandard2.0\SQLite.Interop.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\obj\Debug\netcoreapp3.0\Security.csproj.CopyComplete
