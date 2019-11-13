@@ -2,8 +2,8 @@
 using System.Net;
 using System.IO;
 using System.Web;
-using System.Data.SQLite;
 using System.Text;
+using System.Data.SQLite;
 using System.Security.Cryptography;
 
 namespace Security
@@ -18,7 +18,7 @@ namespace Security
     	    //CreateTable(sqlite_conn);
         	//InsertData(sqlite_conn);
         	//ReadData(sqlite_conn);
-            SimpleListenerExample(new string[]{"http://localhost:8080/"}, sqlite_conn);
+            SimpleListenerExample(new string[]{"http://localhost:8000/"}, sqlite_conn);
             sqlite_conn.Close();
         }
 
@@ -235,7 +235,7 @@ namespace Security
          	SQLiteCommand sqlite_cmd;
          	
          	sqlite_cmd = conn.CreateCommand();
-         	sqlite_cmd.CommandText = "SELECT * FROM Users WHERE username LIKE '" + HttpUtility.UrlDecode(username) + "' AND password LIKE '" + HttpUtility.UrlDecode(password) + "';";
+         	sqlite_cmd.CommandText = "SELECT * FROM Users WHERE username LIKE '" + HttpUtility.UrlDecode(username) + "' AND password LIKE '" + HttpUtility.UrlDecode(GenerateSHA512String(password)) + "';";
  		
          	sqlite_datareader = sqlite_cmd.ExecuteReader();
          	while (sqlite_datareader.Read())
