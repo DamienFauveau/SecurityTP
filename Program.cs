@@ -3,6 +3,8 @@ using System.Net;
 using System.IO;
 using System.Web;
 using System.Data.SQLite;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace Security
 {
@@ -12,9 +14,10 @@ namespace Security
         {
         	SQLiteConnection sqlite_conn;
          	sqlite_conn = CreateConnection();
+         	//DeleteTable(sqlite_conn);
     	    //CreateTable(sqlite_conn);
         	//InsertData(sqlite_conn);
-         	//ReadData(sqlite_conn);
+        	//ReadData(sqlite_conn);
             SimpleListenerExample(new string[]{"http://localhost:8080/"}, sqlite_conn);
             sqlite_conn.Close();
         }
@@ -23,7 +26,7 @@ namespace Security
 	    {
 	        SQLiteConnection sqlite_conn;
 	        sqlite_conn = new SQLiteConnection("Data Source=database.db;Version=3;New=True;Compress=True;");
-	        try
+	        try 
 	        {
 	           sqlite_conn.Open();
 	        }
@@ -33,6 +36,18 @@ namespace Security
 	        }
 	        return sqlite_conn;
 	    }
+
+	    //////////// DB QUERIES ////////////
+	    static void DeleteTable(SQLiteConnection conn)
+      	{
+	        SQLiteCommand sqlite_cmd;
+	        
+	        string Createsql = "DROP TABLE IF EXISTS Users";
+	        sqlite_cmd = conn.CreateCommand();
+	        
+	        sqlite_cmd.CommandText = Createsql;
+	        sqlite_cmd.ExecuteNonQuery();
+      	}
 
 	    static void CreateTable(SQLiteConnection conn)
       	{
@@ -50,13 +65,31 @@ namespace Security
          	SQLiteCommand sqlite_cmd;
          	sqlite_cmd = conn.CreateCommand();
          	
-         	sqlite_cmd.CommandText = "INSERT INTO Users(Username, Password) VALUES ('username','password');";
+         	sqlite_cmd.CommandText = "INSERT INTO Users(Username, Password) VALUES ('username','"+GenerateSHA512String("password")+"');";
          	sqlite_cmd.ExecuteNonQuery();
          	
-         	sqlite_cmd.CommandText = "INSERT INTO Users(Username, Password) VALUES ('admin','admin');";
+         	sqlite_cmd.CommandText = "INSERT INTO Users(Username, Password) VALUES ('admin','"+GenerateSHA512String("admin")+"');";
          	sqlite_cmd.ExecuteNonQuery();
       	}
 
+      	static void ReadData(SQLiteConnection conn)
+      	{
+         	SQLiteDataReader sqlite_datareader;
+         	SQLiteCommand sqlite_cmd;
+         	
+         	sqlite_cmd = conn.CreateCommand();
+         	sqlite_cmd.CommandText = "SELECT * FROM Users";
+ 		
+         	sqlite_datareader = sqlite_cmd.ExecuteReader();
+         	while (sqlite_datareader.Read())
+         	{
+            	Console.WriteLine(sqlite_datareader["username"].ToString());
+            	Console.WriteLine(sqlite_datareader["password"].ToString() + "\n");
+         	}
+      	}
+      	///////////////////////////////////
+
+      	////////////// HTTP ///////////////
 		static void SimpleListenerExample(string[] prefixes, SQLiteConnection sqlite_conn)
 		{
 		    if (!HttpListener.IsSupported)
@@ -85,29 +118,40 @@ namespace Security
 				String url = request.Url.AbsolutePath;
 				Console.WriteLine(url);
 
-				string[] postCredentials = LoginRequestData(request);
-
-			    if(postCredentials.Length > 0)
+				if(url == "/login")
+				{
+					string[] postCredentials = LoginRequestData(request);
+				    if(postCredentials.Length > 0)
+				    {
+				    	Console.WriteLine(postCredentials[0]);
+				    	Console.WriteLine(postCredentials[1]);
+				    	if(ConnectUser(sqlite_conn, postCredentials[0], postCredentials[1]))
+				    	{
+				    		Console.WriteLine("Credentials OK");
+				    		SetSession();
+				    		response.Redirect("http://localhost:8080/upload");
+				    	}
+				    	else
+				    	{
+				    		Console.WriteLine("Wrong username or password");
+				    	}
+			    	}
+			    }
+			    else if(url == "/upload")
 			    {
-			    	Console.WriteLine(postCredentials[0]);
-			    	Console.WriteLine(postCredentials[1]);
-			    	if(ConnectUser(sqlite_conn, postCredentials[0], postCredentials[1]))
+			    	if(!CheckSession())
 			    	{
-			    		Console.WriteLine("Credentials OK");
-			    		// Set user session
-			    		response.Redirect("http://localhost:8080/upload");
+			    		//response.Redirect("http://localhost:8080/login");
 			    	}
-			    	else
-			    	{
-			    		Console.WriteLine("Wrong username or password");
-			    	}
-		    	}
+			    	String fileUpload = UploadRequestData(request);
+			    	Console.WriteLine(fileUpload);
+			    }
 
-				renderHtml(url, response);
+				RenderHtml(url, response);
 			}
 		}
 
-		static void renderHtml(String url, HttpListenerResponse response)
+		static void RenderHtml(String url, HttpListenerResponse response)
 		{
 			String responseString;
 			switch(url)
@@ -159,6 +203,7 @@ namespace Security
 
 		    output.Close();
 		}
+		///////////////////////////////////
 
 		////////////// LOGIN //////////////
 		static string[] LoginRequestData(HttpListenerRequest request)
@@ -200,7 +245,68 @@ namespace Security
          	
          	return false;
       	}
-      	////////////////////////////////////
+
+      	static bool SetSession() // TODO
+      	{
+      		return false;
+      	}
+      	///////////////////////////////////
+
+      	////////////// UPLOAD /////////////
+		static String UploadRequestData(HttpListenerRequest request)
+		{
+		    if (!request.HasEntityBody)
+		    {
+		        Console.WriteLine("No client data was sent with the request.");
+		        return null;
+		    }
+		    System.IO.Stream body = request.InputStream;
+		    System.Text.Encoding encoding = request.ContentEncoding;
+		    System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
+
+		    string s = reader.ReadToEnd();
+		    string[] posts = s.Split("&");
+		    string fileUpload = posts[0].Split("=")[1];
+
+		    body.Close();
+		    reader.Close();
+		    
+		    return new String(fileUpload);
+		}
+
+      	static bool CheckSession() // TODO
+      	{
+      		return false;
+      	}
+      	///////////////////////////////////
+
+      	//////////////// HASH /////////////
+      	public static string GenerateSHA256String(string inputString)
+        {
+            SHA256 sha256 = SHA256Managed.Create();
+            byte[] bytes = Encoding.UTF8.GetBytes(inputString);
+            byte[] hash = sha256.ComputeHash(bytes);
+            return GetStringFromHash(hash);
+        }
+
+        public static string GenerateSHA512String(string inputString)
+        {
+            SHA512 sha512 = SHA512Managed.Create();
+            byte[] bytes = Encoding.UTF8.GetBytes(inputString);
+            byte[] hash = sha512.ComputeHash(bytes);
+            return GetStringFromHash(hash);
+        }
+
+        private static string GetStringFromHash(byte[] hash)
+        {
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < hash.Length; i++)
+            {
+                result.Append(hash[i].ToString("X2"));
+            }
+            return result.ToString();
+        }
+        ///////////////////////////////////
 
     }
 }
