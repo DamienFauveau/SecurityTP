@@ -3,7 +3,9 @@ using System.Net;
 using System.IO;
 using System.Web;
 using System.Text;
+using System.Data;
 using System.Data.SQLite;
+using System.Data.SqlClient;
 using System.Security.Cryptography;
 
 namespace Security
@@ -53,7 +55,7 @@ namespace Security
       	{
 	        SQLiteCommand sqlite_cmd;
 	        
-	        string Createsql = "CREATE TABLE Users(Username VARCHAR(50), Password VARCHAR(255))";
+	        string Createsql = "CREATE TABLE Users(Username NVARCHAR(255), Password NVARCHAR(255))";
 	        sqlite_cmd = conn.CreateCommand();
 	        
 	        sqlite_cmd.CommandText = Createsql;
@@ -129,7 +131,7 @@ namespace Security
 				    	{
 				    		Console.WriteLine("Credentials OK");
 				    		SetSession();
-				    		response.Redirect("http://localhost:8080/upload");
+				    		response.Redirect("http://localhost:8000/upload");
 				    	}
 				    	else
 				    	{
@@ -141,7 +143,7 @@ namespace Security
 			    {
 			    	if(!CheckSession())
 			    	{
-			    		//response.Redirect("http://localhost:8080/login");
+			    		//response.Redirect("http://localhost:8000/login");
 			    	}
 			    	String fileUpload = UploadRequestData(request);
 			    	Console.WriteLine(fileUpload);
@@ -231,17 +233,20 @@ namespace Security
 
 		static bool ConnectUser(SQLiteConnection conn, string username, string password)
       	{
-         	SQLiteDataReader sqlite_datareader;
-         	SQLiteCommand sqlite_cmd;
-         	
-         	sqlite_cmd = conn.CreateCommand();
-         	sqlite_cmd.CommandText = "SELECT * FROM Users WHERE username LIKE '" + HttpUtility.UrlDecode(username) + "' AND password LIKE '" + HttpUtility.UrlDecode(GenerateSHA512String(password)) + "';";
- 		
-         	sqlite_datareader = sqlite_cmd.ExecuteReader();
-         	while (sqlite_datareader.Read())
-         	{
-            	return true;
-         	}
+	        string sql = "SELECT * FROM Users WHERE username LIKE @username AND password LIKE @password";
+	 			
+			using (conn)
+			using (SQLiteCommand sqlite_cmd = new SQLiteCommand(sql, conn))
+			{			    
+			    sqlite_cmd.Parameters.AddWithValue("@username", HttpUtility.UrlDecode(username));
+			    sqlite_cmd.Parameters.AddWithValue("@password", GenerateSHA512String(HttpUtility.UrlDecode(password)));
+
+			    SQLiteDataReader sqlite_datareader = sqlite_cmd.ExecuteReader();
+			    while (sqlite_datareader.Read())
+	         	{
+	            	return true;
+	         	}
+			}			
          	
          	return false;
       	}
