@@ -39,6 +39,10 @@
             "System.Data.SQLite": {
               "target": "Package",
               "version": "[1.0.112, )"
+            },
+            "System.Drawing.Common": {
+              "target": "Package",
+              "version": "[4.5.2, )"
             }
           },
           "imports": [

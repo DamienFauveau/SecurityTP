@@ -15,3 +15,8 @@ E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\o
 E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\win-x64\native\netstandard2.0\SQLite.Interop.dll
 E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\win-x86\native\netstandard2.0\SQLite.Interop.dll
 E:\Documents\Cours\MyDigtalSchool\M2\Security\obj\Debug\netcoreapp3.0\Security.csproj.CopyComplete
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\Microsoft.Win32.SystemEvents.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\System.Drawing.Common.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\win\lib\netcoreapp3.0\Microsoft.Win32.SystemEvents.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\unix\lib\netcoreapp3.0\System.Drawing.Common.dll
+E:\Documents\Cours\MyDigtalSchool\M2\Security\bin\Debug\netcoreapp3.0\runtimes\win\lib\netcoreapp3.0\System.Drawing.Common.dll

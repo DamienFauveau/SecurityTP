@@ -7,6 +7,9 @@ using System.Data;
 using System.Data.SQLite;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Collections.Generic;
 
 namespace Security
 {
@@ -19,7 +22,7 @@ namespace Security
          	//DeleteTable(sqlite_conn);
     	    //CreateTable(sqlite_conn);
         	//InsertData(sqlite_conn);
-        	//ReadData(sqlite_conn);
+        	ReadData(sqlite_conn);
             SimpleListenerExample(new string[]{"http://localhost:8000/"}, sqlite_conn);
             sqlite_conn.Close();
         }
@@ -44,9 +47,12 @@ namespace Security
       	{
 	        SQLiteCommand sqlite_cmd;
 	        
-	        string Createsql = "DROP TABLE IF EXISTS Users";
+	        string Createsql = @"
+	        	DROP TABLE IF EXISTS Users;
+	        	DROP TABLE IF EXISTS Images;
+	        ";
 	        sqlite_cmd = conn.CreateCommand();
-	        
+
 	        sqlite_cmd.CommandText = Createsql;
 	        sqlite_cmd.ExecuteNonQuery();
       	}
@@ -55,9 +61,12 @@ namespace Security
       	{
 	        SQLiteCommand sqlite_cmd;
 	        
-	        string Createsql = "CREATE TABLE Users(Username NVARCHAR(255), Password NVARCHAR(255))";
+	        string Createsql = @"
+	        	CREATE TABLE Users(Id INT, Username NVARCHAR(255), Password NVARCHAR(255));
+	        	CREATE TABLE Images(Id INT, File BLOB);
+	        ";
 	        sqlite_cmd = conn.CreateCommand();
-	        
+
 	        sqlite_cmd.CommandText = Createsql;
 	        sqlite_cmd.ExecuteNonQuery();
       	}
@@ -87,6 +96,15 @@ namespace Security
          	{
             	Console.WriteLine(sqlite_datareader["username"].ToString());
             	Console.WriteLine(sqlite_datareader["password"].ToString() + "\n");
+         	}
+
+         	sqlite_cmd = conn.CreateCommand();
+         	sqlite_cmd.CommandText = "SELECT * FROM Images";
+ 		
+         	sqlite_datareader = sqlite_cmd.ExecuteReader();
+         	while (sqlite_datareader.Read())
+         	{
+            	Console.WriteLine(sqlite_datareader["File"].ToString());
          	}
       	}
       	///////////////////////////////////
@@ -143,10 +161,19 @@ namespace Security
 			    {
 			    	if(!CheckSession())
 			    	{
-			    		//response.Redirect("http://localhost:8000/login");
+			    		response.Redirect("http://localhost:8000/login");
 			    	}
 			    	String fileUpload = UploadRequestData(request);
 			    	Console.WriteLine(fileUpload);
+			    	if(fileUpload.Length > 0)
+			    	{
+			    		InsertFileDatabase(sqlite_conn, fileUpload);
+			    	}
+			    }
+			    else if(url == "/gallery")
+			    {
+			    	List<String> images = GetGalleryPhotos(sqlite_conn);
+			    	Console.WriteLine(images);
 			    }
 
 				RenderHtml(url, response);
@@ -181,6 +208,16 @@ namespace Security
 				    			<input name='fileUpload' type='file' placeholder='File to upload'><br>
 				    			<input type='submit'>
 				    		</form>
+				    	</body>
+				    </html>
+				";
+				break;
+
+				case "/gallery":
+				responseString = @"
+				    <html>
+				    	<body>
+				    		<img src=''>
 				    	</body>
 				    </html>
 				";
@@ -251,9 +288,9 @@ namespace Security
          	return false;
       	}
 
-      	static bool SetSession() // TODO
+      	static void SetSession() // TODO
       	{
-      		return false;
+      		
       	}
       	///////////////////////////////////
 
@@ -263,7 +300,7 @@ namespace Security
 		    if (!request.HasEntityBody)
 		    {
 		        Console.WriteLine("No client data was sent with the request.");
-		        return null;
+		        return new String("");
 		    }
 		    System.IO.Stream body = request.InputStream;
 		    System.Text.Encoding encoding = request.ContentEncoding;
@@ -279,9 +316,49 @@ namespace Security
 		    return new String(fileUpload);
 		}
 
+		static void InsertFileDatabase(SQLiteConnection conn, String fileUpload)
+		{
+			Image img = Image.FromFile(fileUpload);
+            MemoryStream tmpStream = new MemoryStream();
+            img.Save (tmpStream, ImageFormat.Png);
+            tmpStream.Seek (0, SeekOrigin.Begin);
+            byte[] imgBytes = new byte[2000];
+            tmpStream.Read (imgBytes, 0, 2000);
+
+			string sql = "INSERT INTO Images(file) VALUES(@file)";
+			
+			using (conn)
+			using (var sqlite_cmd = new SQLiteCommand(sql, conn))
+	        {
+	            sqlite_cmd.Parameters.AddWithValue("@file", imgBytes);
+				sqlite_cmd.ExecuteNonQuery();
+	        }
+		}
+
       	static bool CheckSession() // TODO
       	{
-      		return false;
+      		return true;
+      	}
+      	///////////////////////////////////
+
+      	///////////// GALLERY /////////////
+      	static List<String> GetGalleryPhotos(SQLiteConnection conn) // TODO
+      	{
+      		List<String> images = new List<String>();
+
+      		SQLiteDataReader sqlite_datareader;
+         	SQLiteCommand sqlite_cmd;
+         	
+         	sqlite_cmd = conn.CreateCommand();
+         	sqlite_cmd.CommandText = "SELECT * FROM Images";
+ 		
+         	sqlite_datareader = sqlite_cmd.ExecuteReader();
+         	while (sqlite_datareader.Read())
+         	{
+            	images.Add(sqlite_datareader["File"].ToString());
+         	}
+
+         	return images;
       	}
       	///////////////////////////////////
 
