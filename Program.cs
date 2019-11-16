@@ -138,6 +138,8 @@ namespace Security
 				String url = request.Url.AbsolutePath;
 				Console.WriteLine(url);
 
+				List<Image> images = new List<Image>();
+
 				if(url == "/login")
 				{
 					string[] postCredentials = LoginRequestData(request);
@@ -168,19 +170,25 @@ namespace Security
 			    	if(fileUpload.Length > 0)
 			    	{
 			    		InsertFileDatabase(sqlite_conn, fileUpload);
+			    		response.Redirect("http://localhost:8000/gallery");
 			    	}
 			    }
 			    else if(url == "/gallery")
 			    {
-			    	List<String> images = GetGalleryPhotos(sqlite_conn);
+			    	List<byte[]> byteImages = GetGalleryPhotos(sqlite_conn);
+
+			    	for(int i = 0; i < byteImages.Count; i++)
+			    	{
+			    		images.Add(ByteToImage(byteImages[i]));
+			    	}
 			    	Console.WriteLine(images);
 			    }
 
-				RenderHtml(url, response);
+				RenderHtml(url, response, images);
 			}
 		}
 
-		static void RenderHtml(String url, HttpListenerResponse response)
+		static void RenderHtml(String url, HttpListenerResponse response, List<Image> images)
 		{
 			String responseString;
 			switch(url)
@@ -217,7 +225,8 @@ namespace Security
 				responseString = @"
 				    <html>
 				    	<body>
-				    		<img src=''>
+				    	Gallery
+				    		"+ images[0] +@"
 				    	</body>
 				    </html>
 				";
@@ -318,12 +327,12 @@ namespace Security
 
 		static void InsertFileDatabase(SQLiteConnection conn, String fileUpload)
 		{
-			Image img = Image.FromFile(fileUpload);
+			Image img = Image.FromFile("images/"+fileUpload);
             MemoryStream tmpStream = new MemoryStream();
             img.Save (tmpStream, ImageFormat.Png);
             tmpStream.Seek (0, SeekOrigin.Begin);
-            byte[] imgBytes = new byte[2000];
-            tmpStream.Read (imgBytes, 0, 2000);
+            byte[] imgBytes = new byte[2000000];
+            tmpStream.Read (imgBytes, 0, 2000000);
 
 			string sql = "INSERT INTO Images(file) VALUES(@file)";
 			
@@ -342,9 +351,9 @@ namespace Security
       	///////////////////////////////////
 
       	///////////// GALLERY /////////////
-      	static List<String> GetGalleryPhotos(SQLiteConnection conn) // TODO
+      	static List<byte[]> GetGalleryPhotos(SQLiteConnection conn) // TODO
       	{
-      		List<String> images = new List<String>();
+      		List<byte[]> images = new List<byte[]>();
 
       		SQLiteDataReader sqlite_datareader;
          	SQLiteCommand sqlite_cmd;
@@ -355,11 +364,23 @@ namespace Security
          	sqlite_datareader = sqlite_cmd.ExecuteReader();
          	while (sqlite_datareader.Read())
          	{
-            	images.Add(sqlite_datareader["File"].ToString());
+            	images.Add((Byte[])(sqlite_datareader["File"]));
          	}
 
          	return images;
       	}
+
+      	public static Bitmap ByteToImage(byte[] blob)
+		{
+		    MemoryStream mStream = new MemoryStream();
+		    byte[] pData = blob;
+
+		    mStream.Write(pData, 0, Convert.ToInt32(pData.Length));
+		    Bitmap bm = new Bitmap(mStream, false);
+		    mStream.Dispose();
+
+		    return bm;
+		}
       	///////////////////////////////////
 
       	//////////////// HASH /////////////
