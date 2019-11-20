@@ -22,11 +22,12 @@ namespace Security
          	//DeleteTable(sqlite_conn);
     	    //CreateTable(sqlite_conn);
         	//InsertData(sqlite_conn);
-        	ReadData(sqlite_conn);
+        	//ReadData(sqlite_conn);
             SimpleListenerExample(new string[]{"http://localhost:8000/"}, sqlite_conn);
             sqlite_conn.Close();
         }
 
+        /* etablish connection to db */
         static SQLiteConnection CreateConnection()
 	    {
 	        SQLiteConnection sqlite_conn;
@@ -42,7 +43,11 @@ namespace Security
 	        return sqlite_conn;
 	    }
 
-	    //////////// DB QUERIES ////////////
+	    ///////////////////////////////////
+	    //////////// DB QUERIES ///////////
+	    ///////////////////////////////////
+
+	    /* delete all tables */
 	    static void DeleteTable(SQLiteConnection conn)
       	{
 	        SQLiteCommand sqlite_cmd;
@@ -57,6 +62,7 @@ namespace Security
 	        sqlite_cmd.ExecuteNonQuery();
       	}
 
+      	/* create tables to test */
 	    static void CreateTable(SQLiteConnection conn)
       	{
 	        SQLiteCommand sqlite_cmd;
@@ -71,6 +77,7 @@ namespace Security
 	        sqlite_cmd.ExecuteNonQuery();
       	}
 
+      	/* insert data to test */
       	static void InsertData(SQLiteConnection conn)
       	{
          	SQLiteCommand sqlite_cmd;
@@ -83,6 +90,7 @@ namespace Security
          	sqlite_cmd.ExecuteNonQuery();
       	}
 
+      	/* check what's in db */
       	static void ReadData(SQLiteConnection conn)
       	{
          	SQLiteDataReader sqlite_datareader;
@@ -107,9 +115,12 @@ namespace Security
             	Console.WriteLine(sqlite_datareader["File"].ToString());
          	}
       	}
+
+      	///////////////////////////////////
+      	////////////// HTTP ///////////////
       	///////////////////////////////////
 
-      	////////////// HTTP ///////////////
+      	/* HTTP main function : Run server & listen */
 		static void SimpleListenerExample(string[] prefixes, SQLiteConnection sqlite_conn)
 		{
 		    if (!HttpListener.IsSupported)
@@ -147,7 +158,7 @@ namespace Security
 				    {
 				    	Console.WriteLine(postCredentials[0]);
 				    	Console.WriteLine(postCredentials[1]);
-				    	if(ConnectUser(sqlite_conn, postCredentials[0], postCredentials[1]))
+				    	if(IsUserValid(sqlite_conn, postCredentials[0], postCredentials[1]))
 				    	{
 				    		Console.WriteLine("Credentials OK");
 				    		SetSession();
@@ -188,6 +199,7 @@ namespace Security
 			}
 		}
 
+		/* display html according to url requested */
 		static void RenderHtml(String url, HttpListenerResponse response, List<Image> images)
 		{
 			String responseString;
@@ -251,9 +263,12 @@ namespace Security
 
 		    output.Close();
 		}
+
+		///////////////////////////////////
+		////////////// LOGIN //////////////
 		///////////////////////////////////
 
-		////////////// LOGIN //////////////
+		/* get login inputs submitted by user */
 		static string[] LoginRequestData(HttpListenerRequest request)
 		{
 		    if (!request.HasEntityBody)
@@ -277,7 +292,8 @@ namespace Security
 		    return new string[]{username, password};
 		}
 
-		static bool ConnectUser(SQLiteConnection conn, string username, string password)
+		/* check if user exists in db */
+		static bool IsUserValid(SQLiteConnection conn, string username, string password)
       	{
 	        string sql = "SELECT * FROM Users WHERE username LIKE @username AND password LIKE @password";
 	 			
@@ -297,13 +313,11 @@ namespace Security
          	return false;
       	}
 
-      	static void SetSession() // TODO
-      	{
-      		
-      	}
+      	///////////////////////////////////
+      	////////////// UPLOAD /////////////
       	///////////////////////////////////
 
-      	////////////// UPLOAD /////////////
+      	/* return user file uploaded */
 		static String UploadRequestData(HttpListenerRequest request)
 		{
 		    if (!request.HasEntityBody)
@@ -325,6 +339,7 @@ namespace Security
 		    return new String(fileUpload);
 		}
 
+		/* insert user file into db */
 		static void InsertFileDatabase(SQLiteConnection conn, String fileUpload)
 		{
 			Image img = Image.FromFile("images/"+fileUpload);
@@ -344,14 +359,12 @@ namespace Security
 	        }
 		}
 
-      	static bool CheckSession() // TODO
-      	{
-      		return true;
-      	}
+      	///////////////////////////////////
+      	///////////// GALLERY /////////////
       	///////////////////////////////////
 
-      	///////////// GALLERY /////////////
-      	static List<byte[]> GetGalleryPhotos(SQLiteConnection conn) // TODO
+      	/* return all the images of the gallery */
+      	static List<byte[]> GetGalleryPhotos(SQLiteConnection conn)
       	{
       		List<byte[]> images = new List<byte[]>();
 
@@ -370,6 +383,7 @@ namespace Security
          	return images;
       	}
 
+      	/* transform data of blob into readable image */
       	public static Bitmap ByteToImage(byte[] blob)
 		{
 		    MemoryStream mStream = new MemoryStream();
@@ -381,9 +395,12 @@ namespace Security
 
 		    return bm;
 		}
+
+		///////////////////////////////////
+      	//////////////// HASH /////////////
       	///////////////////////////////////
 
-      	//////////////// HASH /////////////
+      	/* create hash with sha256 */
       	public static string GenerateSHA256String(string inputString)
         {
             SHA256 sha256 = SHA256Managed.Create();
@@ -392,6 +409,7 @@ namespace Security
             return GetStringFromHash(hash);
         }
 
+        /* create hash with sha512 */
         public static string GenerateSHA512String(string inputString)
         {
             SHA512 sha512 = SHA512Managed.Create();
@@ -400,6 +418,7 @@ namespace Security
             return GetStringFromHash(hash);
         }
 
+        /* return the string of an hash */
         private static string GetStringFromHash(byte[] hash)
         {
             StringBuilder result = new StringBuilder();
@@ -409,7 +428,23 @@ namespace Security
             }
             return result.ToString();
         }
+
         ///////////////////////////////////
+      	////////////// SESSION ////////////
+      	///////////////////////////////////
+
+      	/* set session for user */
+      	static void SetSession()
+      	{
+      		// Not implemented
+      	}
+
+		/* check if user is connected */
+      	static bool CheckSession()
+      	{
+      		// Not implemented
+      		return true;
+      	}
 
     }
 }
